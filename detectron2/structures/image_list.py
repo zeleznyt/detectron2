@@ -1,11 +1,11 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 from __future__ import division
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Tuple
 import torch
 from torch import device
 from torch.nn import functional as F
 
-from detectron2.layers.wrappers import move_device_like, shapes_to_tensor
+from detectron2.layers.wrappers import shapes_to_tensor
 
 
 class ImageList(object):
@@ -57,10 +57,7 @@ class ImageList(object):
 
     @staticmethod
     def from_tensors(
-        tensors: List[torch.Tensor],
-        size_divisibility: int = 0,
-        pad_value: float = 0.0,
-        padding_constraints: Optional[Dict[str, int]] = None,
+        tensors: List[torch.Tensor], size_divisibility: int = 0, pad_value: float = 0.0
     ) -> "ImageList":
         """
         Args:
@@ -70,11 +67,7 @@ class ImageList(object):
             size_divisibility (int): If `size_divisibility > 0`, add padding to ensure
                 the common height and width is divisible by `size_divisibility`.
                 This depends on the model and many models need a divisibility of 32.
-            pad_value (float): value to pad.
-            padding_constraints (optional[Dict]): If given, it would follow the format as
-                {"size_divisibility": int, "square": int}, where `size_divisibility` will overwrite
-                the above one if presented and `square` indicates if require inputs to be padded to
-                square.
+            pad_value (float): value to pad
 
         Returns:
             an `ImageList`.
@@ -89,12 +82,6 @@ class ImageList(object):
         image_sizes_tensor = [shapes_to_tensor(x) for x in image_sizes]
         max_size = torch.stack(image_sizes_tensor).max(0).values
 
-        if padding_constraints is not None:
-            if padding_constraints.get("square", 0) > 0:
-                # pad to square.
-                max_size[0] = max_size[1] = max_size.max()
-            if "size_divisibility" in padding_constraints:
-                size_divisibility = padding_constraints["size_divisibility"]
         if size_divisibility > 1:
             stride = size_divisibility
             # the last two dims are H,W, both subject to divisibility requirement
@@ -116,11 +103,7 @@ class ImageList(object):
         else:
             # max_size can be a tensor in tracing mode, therefore convert to list
             batch_shape = [len(tensors)] + list(tensors[0].shape[:-2]) + list(max_size)
-            device = (
-                None if torch.jit.is_scripting() else ("cpu" if torch.jit.is_tracing() else None)
-            )
-            batched_imgs = tensors[0].new_full(batch_shape, pad_value, device=device)
-            batched_imgs = move_device_like(batched_imgs, tensors[0])
+            batched_imgs = tensors[0].new_full(batch_shape, pad_value)
             for img, pad_img in zip(tensors, batched_imgs):
                 pad_img[..., : img.shape[-2], : img.shape[-1]].copy_(img)
 

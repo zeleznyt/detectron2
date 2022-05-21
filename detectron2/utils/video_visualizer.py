@@ -1,9 +1,7 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import numpy as np
-from typing import List
 import pycocotools.mask as mask_util
 
-from detectron2.structures import Instances
 from detectron2.utils.visualizer import (
     ColorMode,
     Visualizer,
@@ -12,6 +10,8 @@ from detectron2.utils.visualizer import (
 )
 
 from .colormap import random_color, random_colors
+from detectron2.structures import Instances
+from typing import List
 
 
 class _DetectedInstance:
@@ -81,11 +81,8 @@ class VideoVisualizer:
         colors = predictions.COLOR if predictions.has("COLOR") else [None] * len(predictions)
         periods = predictions.ID_period if predictions.has("ID_period") else None
         period_threshold = self.metadata.get("period_threshold", 0)
-        visibilities = (
-            [True] * len(predictions)
-            if periods is None
-            else [x > period_threshold for x in periods]
-        )
+        visibilities = [True] * len(predictions) if periods is None else [
+            x > period_threshold for x in periods]
 
         if predictions.has("pred_masks"):
             masks = predictions.pred_masks
@@ -273,9 +270,7 @@ class VideoVisualizer:
                 colors.append(self._color_pool[self._assigned_colors[id]])
                 untracked_ids.remove(id)
             else:
-                assert (
-                    len(self._color_idx_set) >= 1
-                ), f"Number of id exceeded maximum, \
+                assert len(self._color_idx_set) >= 1, f"Number of id exceeded maximum, \
                     max = {self._max_num_instances}"
                 idx = self._color_idx_set.pop()
                 color = self._color_pool[idx]

@@ -1,15 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
-import numpy as np
 import unittest
-from copy import deepcopy
-from typing import Dict
 import torch
+import numpy as np
 
-from detectron2.config import CfgNode as CfgNode_
-from detectron2.config import instantiate
+from typing import Dict
 from detectron2.structures import Boxes, Instances
+from detectron2.config import instantiate, CfgNode as CfgNode_
 from detectron2.tracking.base_tracker import build_tracker_head
 from detectron2.tracking.bbox_iou_tracker import BBoxIOUTracker  # noqa
+from copy import deepcopy
 
 
 class TestBBoxIOUTracker(unittest.TestCase):
@@ -79,7 +78,7 @@ class TestBBoxIOUTracker(unittest.TestCase):
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         self.assertTrue(tracker._video_height == self._img_size[0])
@@ -107,7 +106,7 @@ class TestBBoxIOUTracker(unittest.TestCase):
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         instances = tracker._initialize_extra_fields(self._curr_instances)
@@ -124,7 +123,7 @@ class TestBBoxIOUTracker(unittest.TestCase):
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         instances = deepcopy(self._curr_instances)
@@ -143,7 +142,7 @@ class TestBBoxIOUTracker(unittest.TestCase):
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         prev_instances = tracker.update(self._prev_instances)

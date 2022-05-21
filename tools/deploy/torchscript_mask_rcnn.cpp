@@ -135,8 +135,7 @@ Usage:
       export_method == "caffe2_tracing" || export_method == "tracing" ||
       export_method == "scripting");
 
-  torch::jit::FusionStrategy strat = {{torch::jit::FusionBehavior::DYNAMIC, 1}};
-  torch::jit::setFusionStrategy(strat);
+  torch::jit::getBailoutDepth() = 1;
   torch::autograd::AutoGradMode guard(false);
   auto module = torch::jit::load(argv[1]);
 

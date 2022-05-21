@@ -545,12 +545,9 @@ class DensePoseCocoEval(object):
             return (
                 # pyre-fixme[16]: `Tensor` has no attribute `argmax`.
                 F.interpolate(
-                    dt["coarse_segm"].unsqueeze(0),
                     # pyre-fixme[6]: Expected `Optional[int]` for 2nd param but got
                     #  `Tuple[int, int]`.
-                    (dy, dx),
-                    mode="bilinear",
-                    align_corners=False,
+                    dt["coarse_segm"].unsqueeze(0), (dy, dx), mode="bilinear", align_corners=False
                 )
                 .squeeze(0)
                 .argmax(0)
@@ -567,12 +564,9 @@ class DensePoseCocoEval(object):
             dx = max(int(dt["bbox"][2]), 1)
             return (
                 F.interpolate(
-                    coarse_segm.unsqueeze(0),
                     # pyre-fixme[6]: Expected `Optional[int]` for 2nd param but got
                     #  `Tuple[int, int]`.
-                    (dy, dx),
-                    mode="bilinear",
-                    align_corners=False,
+                    coarse_segm.unsqueeze(0), (dy, dx), mode="bilinear", align_corners=False
                 )
                 .squeeze(0)
                 .argmax(0)

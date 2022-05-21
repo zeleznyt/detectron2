@@ -505,15 +505,13 @@ class EvalHook(HookBase):
     It is executed every ``eval_period`` iterations and after the last iteration.
     """
 
-    def __init__(self, eval_period, eval_function, eval_after_train=True):
+    def __init__(self, eval_period, eval_function):
         """
         Args:
             eval_period (int): the period to run `eval_function`. Set to 0 to
-                not evaluate periodically (but still evaluate after the last iteration
-                if `eval_after_train` is True).
+                not evaluate periodically (but still after the last iteration).
             eval_function (callable): a function which takes no arguments, and
                 returns a nested dict of evaluation metrics.
-            eval_after_train (bool): whether to evaluate after the last iteration
 
         Note:
             This hook must be enabled in all or none workers.
@@ -522,7 +520,6 @@ class EvalHook(HookBase):
         """
         self._period = eval_period
         self._func = eval_function
-        self._eval_after_train = eval_after_train
 
     def _do_eval(self):
         results = self._func()
@@ -556,7 +553,7 @@ class EvalHook(HookBase):
 
     def after_train(self):
         # This condition is to prevent the eval from running after a failed training
-        if self._eval_after_train and self.trainer.iter + 1 >= self.trainer.max_iter:
+        if self.trainer.iter + 1 >= self.trainer.max_iter:
             self._do_eval()
         # func is likely a closure that holds reference to the trainer
         # therefore we clean it to avoid circular reference in the end

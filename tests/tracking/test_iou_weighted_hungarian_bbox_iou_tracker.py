@@ -1,17 +1,14 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import copy
-import numpy as np
 import unittest
 from typing import Dict
-import torch
 
-from detectron2.config import CfgNode as CfgNode_
-from detectron2.config import instantiate
+import numpy as np
+import torch
+from detectron2.config import CfgNode as CfgNode_, instantiate
 from detectron2.structures import Boxes, Instances
 from detectron2.tracking.base_tracker import build_tracker_head
-from detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker import (  # noqa
-    IOUWeightedHungarianBBoxIOUTracker,
-)
+from detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker import IOUWeightedHungarianBBoxIOUTracker  # noqa
 
 
 class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
@@ -74,14 +71,14 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
 
     def test_init(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         self.assertTrue(tracker._video_height == self._img_size[0])
@@ -102,14 +99,14 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
 
     def test_initialize_extra_fields(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         instances = tracker._initialize_extra_fields(self._curr_instances)
@@ -119,14 +116,14 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
 
     def test_process_matched_idx(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         prev_instances = tracker._initialize_extra_fields(self._prev_instances)
@@ -134,19 +131,20 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
         curr_instances = tracker._initialize_extra_fields(self._curr_instances)
         matched_idx = np.array([0])
         matched_prev_idx = np.array([1])
-        curr_instances = tracker._process_matched_idx(curr_instances, matched_idx, matched_prev_idx)
+        curr_instances = tracker._process_matched_idx(
+            curr_instances, matched_idx, matched_prev_idx)
         self.assertTrue(curr_instances.ID[0] == 1)
 
     def test_process_unmatched_idx(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         prev_instances = tracker._initialize_extra_fields(self._prev_instances)
@@ -154,20 +152,21 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
         curr_instances = tracker._initialize_extra_fields(self._curr_instances)
         matched_idx = np.array([0])
         matched_prev_idx = np.array([1])
-        curr_instances = tracker._process_matched_idx(curr_instances, matched_idx, matched_prev_idx)
+        curr_instances = tracker._process_matched_idx(
+            curr_instances, matched_idx, matched_prev_idx)
         curr_instances = tracker._process_unmatched_idx(curr_instances, matched_idx)
         self.assertTrue(curr_instances.ID[1] == 2)
 
     def test_process_unmatched_prev_idx(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         prev_instances = tracker._initialize_extra_fields(self._prev_instances)
@@ -176,25 +175,34 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
         curr_instances = tracker._initialize_extra_fields(self._curr_instances)
         matched_idx = np.array([0])
         matched_prev_idx = np.array([1])
-        curr_instances = tracker._process_matched_idx(curr_instances, matched_idx, matched_prev_idx)
+        curr_instances = tracker._process_matched_idx(
+            curr_instances, matched_idx, matched_prev_idx)
         curr_instances = tracker._process_unmatched_idx(curr_instances, matched_idx)
         curr_instances = tracker._process_unmatched_prev_idx(curr_instances, matched_prev_idx)
         self.assertTrue(curr_instances.ID[2] == 0)
 
     def test_assign_cost_matrix_values(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
-        pair1 = {"idx": 0, "prev_idx": 1, "IoU": 0.6}
-        pair2 = {"idx": 1, "prev_idx": 0, "IoU": 0.8}
+        pair1 = {
+            "idx": 0,
+            "prev_idx": 1,
+            "IoU": 0.6
+        }
+        pair2 = {
+            "idx": 1,
+            "prev_idx": 0,
+            "IoU": 0.8
+        }
         bbox_pairs = [pair1, pair2]
         cost_matrix = np.full((2, 2), np.inf)
         target_matrix = copy.deepcopy(cost_matrix)
@@ -205,14 +213,14 @@ class TestIOUWeightedHungarianBBoxIOUTracker(unittest.TestCase):
 
     def test_update(self):
         cfg = {
-            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker",  # noqa
+            "_target_": "detectron2.tracking.iou_weighted_hungarian_bbox_iou_tracker.IOUWeightedHungarianBBoxIOUTracker", # noqa
             "video_height": self._img_size[0],
             "video_width": self._img_size[1],
             "max_num_instances": self._max_num_instances,
             "max_lost_frame_count": self._max_lost_frame_count,
             "min_box_rel_dim": self._min_box_rel_dim,
             "min_instance_period": self._min_instance_period,
-            "track_iou_threshold": self._track_iou_threshold,
+            "track_iou_threshold": self._track_iou_threshold
         }
         tracker = instantiate(cfg)
         _ = tracker.update(self._prev_instances)

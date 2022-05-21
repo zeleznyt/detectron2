@@ -7,7 +7,6 @@ from torch import nn
 
 from detectron2.config import configurable
 from detectron2.data.detection_utils import convert_image_to_rgb
-from detectron2.layers import move_device_like
 from detectron2.structures import ImageList, Instances
 from detectron2.utils.events import get_event_storage
 from detectron2.utils.logger import log_first_n
@@ -84,9 +83,6 @@ class GeneralizedRCNN(nn.Module):
     @property
     def device(self):
         return self.pixel_mean.device
-
-    def _move_to_current_device(self, x):
-        return move_device_like(x, self.pixel_mean)
 
     def visualize_training(self, batched_inputs, proposals):
         """
@@ -210,14 +206,15 @@ class GeneralizedRCNN(nn.Module):
                 assert "proposals" in batched_inputs[0]
                 proposals = [x["proposals"].to(self.device) for x in batched_inputs]
 
-            results, _ = self.roi_heads(images, features, proposals, None)
+            results, region_dict = self.roi_heads(images, features, proposals, None)
         else:
             detected_instances = [x.to(self.device) for x in detected_instances]
             results = self.roi_heads.forward_with_given_boxes(features, detected_instances)
 
         if do_postprocess:
             assert not torch.jit.is_scripting(), "Scripting is not supported for postprocess."
-            return GeneralizedRCNN._postprocess(results, batched_inputs, images.image_sizes)
+            tmp_result = GeneralizedRCNN._postprocess(results, batched_inputs, images.image_sizes, region_dict["features"])
+            return tmp_result
         else:
             return results
 
@@ -225,17 +222,13 @@ class GeneralizedRCNN(nn.Module):
         """
         Normalize, pad and batch the input images.
         """
-        images = [self._move_to_current_device(x["image"]) for x in batched_inputs]
+        images = [x["image"].to(self.device) for x in batched_inputs]
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-        images = ImageList.from_tensors(
-            images,
-            self.backbone.size_divisibility,
-            padding_constraints=self.backbone.padding_constraints,
-        )
+        images = ImageList.from_tensors(images, self.backbone.size_divisibility)
         return images
 
     @staticmethod
-    def _postprocess(instances, batched_inputs: List[Dict[str, torch.Tensor]], image_sizes):
+    def _postprocess(instances, batched_inputs: List[Dict[str, torch.Tensor]], image_sizes, features):
         """
         Rescale the output instances to the target size.
         """
@@ -247,7 +240,7 @@ class GeneralizedRCNN(nn.Module):
             height = input_per_image.get("height", image_size[0])
             width = input_per_image.get("width", image_size[1])
             r = detector_postprocess(results_per_image, height, width)
-            processed_results.append({"instances": r})
+            processed_results.append({"instances": r, "features": features})
         return processed_results
 
 
@@ -293,9 +286,6 @@ class ProposalNetwork(nn.Module):
     def device(self):
         return self.pixel_mean.device
 
-    def _move_to_current_device(self, x):
-        return move_device_like(x, self.pixel_mean)
-
     def forward(self, batched_inputs):
         """
         Args:
@@ -307,13 +297,9 @@ class ProposalNetwork(nn.Module):
                 The dict contains one key "proposals" whose value is a
                 :class:`Instances` with keys "proposal_boxes" and "objectness_logits".
         """
-        images = [self._move_to_current_device(x["image"]) for x in batched_inputs]
+        images = [x["image"].to(self.device) for x in batched_inputs]
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-        images = ImageList.from_tensors(
-            images,
-            self.backbone.size_divisibility,
-            padding_constraints=self.backbone.padding_constraints,
-        )
+        images = ImageList.from_tensors(images, self.backbone.size_divisibility)
         features = self.backbone(images.tensor)
 
         if "instances" in batched_inputs[0]:
