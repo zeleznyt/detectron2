@@ -1,3 +1,10 @@
+# Modifications
+Por the purpose of extracting image features so they can be used as input for image captioning method Oscar, following files have been added or modified: 
+* demo/oscar_dataset_builder.py
+* detectron2/modeling/roi_heads/roi_heads.py
+
+
+
 <img src=".github/Detectron2-Logo-Horz.svg" width="300" >
 
 Detectron2 is Facebook AI Research's next generation library
