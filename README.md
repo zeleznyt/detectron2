@@ -1,9 +1,10 @@
 # Modifications
 Por the purpose of extracting image features so they can be used as input for image captioning method Oscar, following files have been added or modified: 
 * demo/oscar_dataset_builder.py
+* demo/predictor.py
 * detectron2/modeling/roi_heads/roi_heads.py
-
-
+* detectron2/modeling/roi_heads/fast_rcnn.py
+* detectron2/modeling/meta_arch/rcnn.py
 
 <img src=".github/Detectron2-Logo-Horz.svg" width="300" >
 
