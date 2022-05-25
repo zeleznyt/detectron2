@@ -228,24 +228,12 @@ if __name__ == "__main__":
     len_feature = 0
     len_label = 0
     
-    #id_dict = {}
-    #
-    #with open(args.id_dictionary, 'r') as f:
-    #    content = f.readlines()
-    #    
-    #for line in content:
-    #    value, key = line.split()
-    #    id_dict[key] = value
-    
     with open(os.path.join(args.output_features, '{}id_dictionary.txt'.format(prefix)), 'w') as f_id:    
         pass
     for idx, path in enumerate(image_list):
         with open(os.path.join(args.output_features, '{}id_dictionary.txt'.format(prefix)), 'a') as f_id:
             f_id.write('{}\t{}\n'.format(str(idx), path.split('/')[-1]))
         print('Processing image: {}'.format(path))
-        #idx = id_dict[path.split('/')[-1].split('.')[0]]
         img = read_image(path, format="BGR")
         predictions, visualized_output = demo.run_on_image(img)
-        #print(path.split('/')[-1].split('.')[0])
-        #print(id_dict['000000357567'])
         len_feature, len_label = save_features(idx, predictions, len_feature, len_label, prefix)
