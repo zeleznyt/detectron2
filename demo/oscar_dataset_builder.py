@@ -17,7 +17,7 @@ from detectron2.config import get_cfg
 from detectron2.data.detection_utils import read_image
 from detectron2.utils.logger import setup_logger
 
-from predictor import VisualizationDemo
+from .predictor import VisualizationDemo
 
 # constants
 WINDOW_NAME = "COCO detections"
@@ -189,6 +189,9 @@ def save_features(idx, predictions, len_feature, len_label, prefix=''):
         f.write(text)
 
     return len_feature, len_label
+
+def testprint():
+    print('hello')
 
 
 if __name__ == "__main__":
