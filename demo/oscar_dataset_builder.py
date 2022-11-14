@@ -247,6 +247,9 @@ def build_feature_dataset(args):
     if len(src_dir_list) == 0:
         print('No files found in input directory. train, val or test directory expected.')
 
+    if not os.path.isdir(args.working_dir):
+        os.mkdir(args.working_dir)
+
     if args.data_subset > 0:
         working_dir = os.path.join(args.working_dir, args.input_path.split('/')[-1])
         if not os.path.isdir(working_dir):
