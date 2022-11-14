@@ -198,12 +198,7 @@ def make_subset(image_list, caption_file, size, id_dictionary):
     with open(caption_file, 'r') as f:
         captions = json.load(f)
     # swapped_id_dict = dict([(value, key) for key, value in id_dictionary.items()])
-    print(type(id_dictionary))
-    print(len(id_dictionary))
-
     swapped_id_dict = {v: k for k, v in id_dictionary.items()}
-    print(type(swapped_id_dict))
-    print(len(swapped_id_dict))
 
     n_samples = int(size*len(image_list))
     print('Sampling {} images from total of {}'.format(n_samples, len(image_list)))
