@@ -211,7 +211,7 @@ def make_subset(image_list, caption_file, size, id_dictionary):
 
     result_captions = []
     for image in sampled_image_list:
-        name = image.split('/')
+        name = image.split('/')[-1]
         img_id = swapped_id_dict[name]
         for caption in captions:
             if caption['image_id'] == img_id:
