@@ -197,7 +197,8 @@ def save_features(directory, idx, predictions, len_feature, len_label, coco_clas
 def make_subset(image_list, caption_file, size, id_dictionary):
     with open(caption_file, 'r') as f:
         captions = json.load(f)
-    swapped_id_dict = dict([(value, key) for key, value in id_dictionary.items()])
+    # swapped_id_dict = dict([(value, key) for key, value in id_dictionary.items()])
+    swapped_id_dict = {v: k for k, v in id_dictionary.items()}
 
     n_samples = int(size*len(image_list))
     print('Sampling {} images from total of {}'.format(n_samples, len(image_list)))
@@ -235,12 +236,11 @@ def build_feature_dataset(args):
         print('input-path path was not found')
         # TODO: exception?
 
-    n_of_images = (len(glob.glob1(args.input_path, "*.jpg")))
-    if n_of_images > 0:
-        print('size of image batch: {}'.format(n_of_images))
-    else:
-        print('no .jpg images in input path found')
-        # TODO: exception?
+    # n_of_images = (len(glob.glob1(args.input_path, "*.jpg")))
+    # if n_of_images > 0:
+    #     print('size of image batch: {}'.format(n_of_images))
+    # else:
+    #     print('no .jpg images in input path found')
 
     # Create directory in args.working_dir named by size of subset and its number
     src_dir_list = [f.path for f in os.scandir(args.input_path) if f.is_dir()]
@@ -249,7 +249,6 @@ def build_feature_dataset(args):
 
     if not os.path.isdir(args.working_dir):
         os.mkdir(args.working_dir)
-
 
     if args.data_subset > 0:
         working_dir = os.path.join(args.working_dir, args.input_path.split('/')[-1])
