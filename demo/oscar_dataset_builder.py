@@ -205,7 +205,9 @@ def make_subset(image_list, caption_file, size, id_dictionary):
     sampled_image_list = random.sample(image_list, n_samples)
 
     result_captions = []
-    for image in sampled_image_list:
+    # for image in sampled_image_list:
+    for i in tqdm.tqdm(range(len(sampled_image_list))):
+        image = sampled_image_list[i]
         name = image.split('/')[-1]
         img_id = swapped_id_dict[name]
         for caption in captions:
@@ -310,7 +312,7 @@ def build_feature_dataset(args):
         for idx, path in enumerate(image_list):
             with open(id_dictionary_file, 'a') as f_id:
                 f_id.write('{}\t{}\n'.format(str(idx), path.split('/')[-1]))
-            print('Processing image: {}'.format(path))
+            # print('Processing image: {}'.format(path))
             img = read_image(path, format="BGR")
             predictions, visualized_output = demo.run_on_image(img)
             len_feature, len_label = save_features(working_dir, idx, predictions, len_feature, len_label, coco_classnames=args.coco_classnames, prefix=prefix)
