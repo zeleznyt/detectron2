@@ -128,15 +128,16 @@ def prepare_files(directory, prefix=''):
     with open(os.path.join(directory, '{}.label.lineidx'.format(prefix)), 'w') as f:
         pass
     with open(os.path.join(directory, '{}.yaml'.format(prefix)), 'w') as f:
-        f.write('img: img.tsv\nhw: hw.tsv\nlabel: {}label.tsv\nfeature: {}.feature.tsv'.format(prefix, prefix))
+        f.write(
+            'img: img.tsv\nhw: hw.tsv\nlabel: {}.label.tsv\nfeature: {}.feature.tsv\ncaption: {}_caption.json'.format(
+                prefix, prefix, prefix))
     with open(os.path.join(directory, '{}.outliers.txt'.format(prefix)), 'w') as f:
         pass
 
 
 def save_features(directory, idx, predictions, len_feature, len_label, coco_classnames, prefix=''):
-
     n_instances = len(predictions["instances"])
-    if n_instances < 1:
+    if n_instances < 1:  # TODO
         with open(os.path.join(directory, '{}.outliers.txt'.format(prefix)), 'a') as f:
             f.write('{}\n'.format(idx))
         return len_feature, len_label
@@ -145,7 +146,7 @@ def save_features(directory, idx, predictions, len_feature, len_label, coco_clas
         f.write('{}\n'.format(len_feature))
     with open(os.path.join(directory, '{}.label.lineidx'.format(prefix)), 'a') as f:
         f.write('{}\n'.format(len_label))
-        
+
     features_array = predictions["features"].cpu().detach().numpy()
 
     img_height = predictions["instances"].image_size[0]
@@ -155,8 +156,8 @@ def save_features(directory, idx, predictions, len_feature, len_label, coco_clas
     y1 = np.reshape(pred_boxes[:, 1] / img_height, (n_instances, 1))
     x2 = np.reshape(pred_boxes[:, 2] / img_width, (n_instances, 1))
     y2 = np.reshape(pred_boxes[:, 3] / img_height, (n_instances, 1))
-    x_len = x2-x1
-    y_len = y2-y1
+    x_len = x2 - x1
+    y_len = y2 - y1
 
     features_array = np.concatenate((features_array, x1, y1, x2, y2, x_len, y_len), axis=1)
     # np.append(features_array, (np.reshape(pred_boxes[:, 0] / img_width, (8, 1))), axis=1)
@@ -180,9 +181,11 @@ def save_features(directory, idx, predictions, len_feature, len_label, coco_clas
 
     labels_info = []
     for i in range(n_instances):
-        labels_info.append({"class": coco_classnames[predictions["instances"]._fields["pred_classes"].cpu().numpy()[i]+1],
-                          "rect": [float(i) for i in list(predictions["instances"]._fields["pred_boxes"][i].tensor.cpu().numpy()[0])],
-                          "conf": float(predictions["instances"]._fields["scores"].cpu().numpy()[i])})
+        labels_info.append(
+            {"class": coco_classnames[predictions["instances"]._fields["pred_classes"].cpu().numpy()[i] + 1],
+             "rect": [float(i) for i in
+                      list(predictions["instances"]._fields["pred_boxes"][i].tensor.cpu().numpy()[0])],
+             "conf": float(predictions["instances"]._fields["scores"].cpu().numpy()[i])})
 
     labels_file = os.path.join(directory, '{}.label.tsv'.format(prefix))
     with open(labels_file, 'a') as f:
@@ -200,13 +203,13 @@ def make_subset(image_list, caption_file, size, id_dictionary):
     # swapped_id_dict = dict([(value, key) for key, value in id_dictionary.items()])
     swapped_id_dict = {v: k for k, v in id_dictionary.items()}
 
-    n_samples = int(size*len(image_list))
+    n_samples = int(size * len(image_list))
     print('Sampling {} images from total of {}'.format(n_samples, len(image_list)))
     sampled_image_list = random.sample(image_list, n_samples)
 
     result_captions = []
     # for image in sampled_image_list:
-    for i in tqdm.tqdm(range(len(sampled_image_list))):
+    for i in tqdm.tqdm(range(len(sampled_image_list)), 'Sampling images'):
         image = sampled_image_list[i]
         name = image.split('/')[-1]
         img_id = swapped_id_dict[name]
@@ -214,7 +217,8 @@ def make_subset(image_list, caption_file, size, id_dictionary):
             if caption['image_id'] == img_id:
                 result_captions.append(caption)
 
-    print('{} images sampled with {} captions from total of {} captions'.format(len(sampled_image_list), len(result_captions), len(captions)))
+    print('{} images sampled with {} captions from total of {} captions'.format(len(sampled_image_list),
+                                                                                len(result_captions), len(captions)))
 
     return sampled_image_list, result_captions
 
@@ -256,12 +260,12 @@ def build_feature_dataset(args):
         working_dir = os.path.join(args.working_dir, args.input_path.split('/')[-1])
         if not os.path.isdir(working_dir):
             os.mkdir(working_dir)
-        subset_dir = os.path.join(working_dir, 'sub{:2.0f}_01'.format(args.data_subset*100))
+        subset_dir = os.path.join(working_dir, 'sub{}_01'.format(str(int(args.data_subset * 100)).zfill(2)))
         if not os.path.isdir(subset_dir):
             os.mkdir(subset_dir)
         else:
             while os.path.isdir(subset_dir):
-                subset_dir = subset_dir[:-1] + str(int(subset_dir[-1])+1)
+                subset_dir = subset_dir[:-2] + str(int(subset_dir[-2:]) + 1).zfill(2)
             os.mkdir(subset_dir)
         working_dir = subset_dir
     else:
@@ -280,43 +284,80 @@ def build_feature_dataset(args):
     # Build
     for directory in src_dir_list:
         prefix = directory.split('/')[-1]
-        prepare_files(working_dir, prefix)
-        if 'train' in prefix:
+
+        if 'val' in prefix or 'test' in prefix:
+            working_dir_save = working_dir[:-len(working_dir.split('/')[-1]) - 1]
+            if os.path.isfile(os.path.join(working_dir_save, '{}_caption.json'.format(prefix))):
+                print('Caption file {} already exists'.format(
+                    os.path.join(working_dir_save, '{}_caption.json'.format(prefix))))
+            else:
+                if not os.path.isfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix))):
+                    print('{} was not found!'.format(os.path.join(args.input_path, '{}_caption.json'.format(prefix))))
+                else:
+                    shutil.copyfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix)),
+                                    os.path.join(working_dir_save, '{}_caption.json'.format(prefix)))
+
+            if os.path.isfile(os.path.join(working_dir_save, '{}_caption_coco_format.json'.format(prefix))):
+                print('Caption file {} already exists'.format(
+                    os.path.join(working_dir_save, '{}_caption_coco_format.json'.format(prefix))))
+            else:
+                if not os.path.isfile(os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix))):
+                    print('{} was not found!'.format(
+                        os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix))))
+                else:
+                    shutil.copyfile(os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix)),
+                                    os.path.join(working_dir_save, '{}_caption_coco_format.json'.format(prefix)))
+
+            if os.path.isfile(os.path.join(working_dir_save, '{}.feature.tsv'.format(prefix))):
+                print('Feature file {} already exists'.format(
+                    os.path.join(working_dir_save, '{}feature.tsv'.format(prefix))))
+                continue
+            else:
+                image_list = [os.path.join(directory, f) for f in os.listdir(directory)]
+
+        elif 'train' in prefix:
             assert os.path.isfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix)))
+            working_dir_save = working_dir
             caption_file = os.path.join(args.input_path, '{}_caption.json'.format(prefix))
             image_list = [os.path.join(directory, f) for f in os.listdir(directory)]
             image_list, result_captions = make_subset(image_list, caption_file, args.data_subset, id_dictionary)
-            with open(os.path.join(working_dir, '{}_caption.json'.format(prefix)), 'w') as f:
+            with open(os.path.join(working_dir_save, '{}_caption.json'.format(prefix)), 'w') as f:
                 json.dump(result_captions, f)
         else:
+            working_dir_save = working_dir
             image_list = [os.path.join(directory, f) for f in os.listdir(directory)]
 
-        if 'val' in prefix or 'test' in prefix:
-            if not os.path.isfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix))):
-                print('{} was not found!'.format(os.path.join(args.input_path, '{}_caption.json'.format(prefix))))
-            else:
-                shutil.copyfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix)), os.path.join(working_dir, '{}_caption.json'.format(prefix)))
-
-            if not os.path.isfile(os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix))):
-                print('{} was not found!'.format(os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix))))
-            else:
-                shutil.copyfile(os.path.join(args.input_path, '{}_caption_coco_format.json'.format(prefix)), os.path.join(working_dir, '{}_caption_coco_format.json'.format(prefix)))
+        prepare_files(working_dir_save, prefix)
 
         len_feature = 0
         len_label = 0
 
-        id_dictionary_file = os.path.join(working_dir, '{}.id_dictionary.txt'.format(prefix))
+        # id_dictionary_file = os.path.join(working_dir, '{}.img.txt'.format(prefix))
+        img_list = []
 
-        with open(id_dictionary_file, 'w') as f_id:
-            pass
-        for idx, path in enumerate(image_list):
-            with open(id_dictionary_file, 'a') as f_id:
-                f_id.write('{}\t{}\n'.format(str(idx), path.split('/')[-1]))
+        # with open(id_dictionary_file, 'w') as f_id:
+        #     pass
+
+        swapped_id_dict = {v: k for k, v in id_dictionary.items()}
+
+        for i in tqdm.tqdm(range(len(image_list)), 'generating tsv'):
+            # for idx, path in enumerate(image_list):
+            path = image_list[i]
+            # with open(id_dictionary_file, 'a') as f_id:
+            #     f_id.write('{}\t{}\n'.format(str(idx), path.split('/')[-1]))
             # print('Processing image: {}'.format(path))
+            img_name = path.split('/')[-1]
+            idx = swapped_id_dict[img_name]
+
+            img_list.append(img_name)
             img = read_image(path, format="BGR")
             predictions, visualized_output = demo.run_on_image(img)
-            len_feature, len_label = save_features(working_dir, idx, predictions, len_feature, len_label, coco_classnames=args.coco_classnames, prefix=prefix)
+            len_feature, len_label = save_features(working_dir_save, idx, predictions, len_feature, len_label,
+                                                   coco_classnames=args.coco_classnames, prefix=prefix)
 
+        with open(os.path.join(working_dir_save, '{}.img_list.txt'.format(prefix)), 'a') as f:
+            json.dump(img_list, f)
+    return working_dir
 
 
 if __name__ == "__main__":
