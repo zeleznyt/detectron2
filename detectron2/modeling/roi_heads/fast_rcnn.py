@@ -159,6 +159,14 @@ def fast_rcnn_inference_single_image(
     filter_mask = scores > score_thresh  # R x K
     # R' x 2. First column contains indices of the R predictions;
     # Second column contains indices of classes.
+
+    #     TODO: important change - always pick at least one/ten detection/s
+    if torch.count_nonzero(filter_mask) < 10:
+        filter_mask = scores >= (torch.topk(scores.flatten(), 10, sorted=True).values[-1])
+
+    # Only one detection
+    # if not torch.any(filter_mask):
+    #     filter_mask = scores == torch.max(scores)
     filter_inds = filter_mask.nonzero()
     if num_bbox_reg_classes == 1:
         boxes = boxes[filter_inds[:, 0], 0]
