@@ -209,7 +209,7 @@ def make_subset(image_list, caption_file, size, id_dictionary):
 
     result_captions = []
     # for image in sampled_image_list:
-    for i in tqdm.tqdm(range(len(sampled_image_list)), 'Sampling images'):
+    for i in tqdm.tqdm(range(len(sampled_image_list)), 'Sampling {} images'.format(caption_file.split('/')[-1].replace('_caption.json', ''))):
         image = sampled_image_list[i]
         name = image.split('/')[-1]
         img_id = swapped_id_dict[name]
@@ -269,7 +269,7 @@ def build_feature_dataset(args):
             os.mkdir(subset_dir)
         working_dir = subset_dir
     else:
-        working_dir = os.path.join(args.working_dir, args.input_path.split('/')[-1])
+        working_dir = os.path.join(args.working_dir, args.input_path.split('/')[-1], 'nosplit_01')
         if not os.path.isdir(working_dir):
             os.mkdir(working_dir)
 
@@ -320,9 +320,16 @@ def build_feature_dataset(args):
             working_dir_save = working_dir
             caption_file = os.path.join(args.input_path, '{}_caption.json'.format(prefix))
             image_list = [os.path.join(directory, f) for f in os.listdir(directory)]
-            image_list, result_captions = make_subset(image_list, caption_file, args.data_subset, id_dictionary)
-            with open(os.path.join(working_dir_save, '{}_caption.json'.format(prefix)), 'w') as f:
-                json.dump(result_captions, f)
+            if args.data_subset <= 0 or args.data_subset > 1:
+                if not os.path.isfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix))):
+                    print('{} was not found!'.format(os.path.join(args.input_path, '{}_caption.json'.format(prefix))))
+                else:
+                    shutil.copyfile(os.path.join(args.input_path, '{}_caption.json'.format(prefix)),
+                                    os.path.join(working_dir_save, '{}_caption.json'.format(prefix)))
+            else:
+                image_list, result_captions = make_subset(image_list, caption_file, args.data_subset, id_dictionary)
+                with open(os.path.join(working_dir_save, '{}_caption.json'.format(prefix)), 'w') as f:
+                    json.dump(result_captions, f)
         else:
             working_dir_save = working_dir
             image_list = [os.path.join(directory, f) for f in os.listdir(directory)]
@@ -340,7 +347,7 @@ def build_feature_dataset(args):
 
         swapped_id_dict = {v: k for k, v in id_dictionary.items()}
 
-        for i in tqdm.tqdm(range(len(image_list)), 'generating tsv'):
+        for i in tqdm.tqdm(range(len(image_list)), 'Generating {} tsv'.format(directory.split('/')[-1])):
             # for idx, path in enumerate(image_list):
             path = image_list[i]
             # with open(id_dictionary_file, 'a') as f_id:
