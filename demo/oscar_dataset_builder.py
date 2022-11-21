@@ -205,6 +205,7 @@ def make_subset(image_list, caption_file, size, id_dictionary):
 
     n_samples = int(size * len(image_list))
     print('Sampling {} images from total of {}'.format(n_samples, len(image_list)))
+    random.seed(None)
     sampled_image_list = random.sample(image_list, n_samples)
 
     result_captions = []
